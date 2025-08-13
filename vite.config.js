@@ -9,8 +9,9 @@ export default defineConfig({
   plugins: [react()],
   base: isElectron ? './' : '/',
   optimizeDeps: {
-    include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js'],
-    exclude: ['signaldb', 'fs'].concat(isElectron ? ['electron', 'electron-fetch'] : [])
+    include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js', 'signaldb'],
+    // Removed 'signaldb' from exclude so it bundles for the web
+    exclude: ['fs'].concat(isElectron ? ['electron', 'electron-fetch'] : [])
   },
   build: {
     commonjsOptions: {
@@ -32,15 +33,13 @@ export default defineConfig({
       },
       external: !isElectron ? ['fs'] : ['fs', 'events']
     },
-    // Avoid inlining assets when building for Electron
     assetsInlineLimit: isElectron ? 0 : 4096,
-    // Use modern targets to allow top-level await
-    target: isElectron ? 'esnext' : 'es2022'
+    target: isElectron ? 'esnext' : 'es2022' // Modern browsers + top-level await
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      // Polyfill "events" only for web builds
+      // Polyfill "events" only for browser builds
       ...(isElectron ? {} : { events: 'events/' })
     }
   },
