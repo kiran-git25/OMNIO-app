@@ -10,7 +10,9 @@ export default defineConfig({
   base: isElectron ? './' : '/',
   optimizeDeps: {
     include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js'],
-    exclude: ['signaldb', 'events', 'fs'].concat(isElectron ? ['electron', 'electron-fetch'] : [])
+    exclude: ['signaldb', 'events', 'fs'].concat(
+      isElectron ? ['electron', 'electron-fetch'] : []
+    )
   },
   build: {
     commonjsOptions: {
@@ -25,13 +27,17 @@ export default defineConfig({
           media: ['simple-peer', 'react-player'],
           utils: ['crypto-js', 'fflate', 'uuid', 'signaldb'],
           encryption: ['@/utils/e2ee']
-        }
-      }
+        },
+        globals: !isElectron
+          ? { fs: '{}', events: 'EventTarget' }
+          : undefined
+      },
+      external: !isElectron ? ['fs', 'events'] : []
     },
     // Avoid inlining assets when building for Electron
     assetsInlineLimit: isElectron ? 0 : 4096,
-    // Configure for Electron or Web
-    target: isElectron ? 'esnext' : 'modules'
+    // Use modern targets to allow top-level await
+    target: isElectron ? 'esnext' : 'es2022'
   },
   resolve: {
     alias: {
@@ -41,34 +47,17 @@ export default defineConfig({
   server: {
     port: 5174,
     strictPort: false,
-    // Allow connections from all sources for development
     host: '0.0.0.0',
-    // Add proper CORS headers for development
     cors: true
   },
-  // Electron-specific configurations
   define: {
-    // Define global constants
-    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || '1.0.0'),
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(
+      process.env.npm_package_version || '1.0.0'
+    ),
     'import.meta.env.VITE_IS_ELECTRON': isElectron,
     global: 'globalThis',
-    // Add security policies for content-security-policy
-    ...(isElectron ? {
-      'process.env.ELECTRON_DISABLE_SECURITY_WARNINGS': 'true'
-    } : {})
-  },
-  build: {
-    ...(!isElectron && {
-      rollupOptions: {
-        external: ['fs', 'events'],
-        output: {
-          globals: {
-            'fs': '{}',
-            'events': 'EventTarget'
-          }
-        }
-      }
-    })
-  },
-
+    ...(isElectron
+      ? { 'process.env.ELECTRON_DISABLE_SECURITY_WARNINGS': 'true' }
+      : {})
+  }
 });
