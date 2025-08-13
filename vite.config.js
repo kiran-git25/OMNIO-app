@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-// Check if building for Electron
 const isElectron = process.env.ELECTRON === 'true';
 
 export default defineConfig({
@@ -10,7 +9,7 @@ export default defineConfig({
   base: isElectron ? './' : '/',
   optimizeDeps: {
     include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js', 'signaldb'],
-    exclude: ['fs'].concat(isElectron ? ['electron', 'electron-fetch'] : [])
+    exclude: isElectron ? ['electron', 'electron-fetch'] : []
   },
   build: {
     commonjsOptions: {
@@ -25,23 +24,19 @@ export default defineConfig({
           media: ['simple-peer', 'react-player'],
           utils: ['crypto-js', 'fflate', 'uuid', 'signaldb'],
           encryption: ['@/utils/e2ee']
-        },
-        globals: !isElectron
-          ? { fs: '{}', events: 'EventTarget' }
-          : undefined
+        }
       },
-      external: !isElectron ? ['fs'] : ['fs', 'events']
+      external: ['fs', 'events']
     },
     assetsInlineLimit: isElectron ? 0 : 4096,
-    target: isElectron ? 'esnext' : 'es2022'
+    target: isElectron ? 'esnext' : 'modules'
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-      // Polyfill "events" for browser builds
-      ...(isElectron ? {} : { events: 'events/' }),
-      // Force SignalDB to use browser ESM build
-      'signaldb': 'signaldb/dist/index16.mjs'
+      '@': path.resolve(__dirname, 'src')
+    },
+    fallback: {
+      events: require.resolve('events/')
     }
   },
   server: {
@@ -51,13 +46,11 @@ export default defineConfig({
     cors: true
   },
   define: {
-    'import.meta.env.VITE_APP_VERSION': JSON.stringify(
-      process.env.npm_package_version || '1.0.0'
-    ),
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || '1.0.0'),
     'import.meta.env.VITE_IS_ELECTRON': isElectron,
     global: 'globalThis',
-    ...(isElectron
-      ? { 'process.env.ELECTRON_DISABLE_SECURITY_WARNINGS': 'true' }
-      : {})
+    ...(isElectron ? {
+      'process.env.ELECTRON_DISABLE_SECURITY_WARNINGS': 'true'
+    } : {})
   }
 });
