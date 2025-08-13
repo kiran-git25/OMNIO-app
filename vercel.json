@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "functions": {
     "app.js": {
       "runtime": "@vercel/node@18.x"
@@ -37,5 +38,7 @@
         }
       ]
     }
-  ]
+  ],
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm install --no-frozen-lockfile && pnpm run build"
 }
