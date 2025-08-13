@@ -1,16 +1,39 @@
 import { useEffect, useState } from "react";
-import { chatCollection } from "../db/signalDB";
+import { initializeDatabase, getChatCollection } from "../db/signalDB";
 
 export function useChat(roomId) {
   const [messages, setMessages] = useState([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const unsub = chatCollection.find({ roomId }).onSnapshot(setMessages);
-    return () => unsub();
+    let unsub = null;
+    let isMounted = true;
+
+    (async () => {
+      try {
+        await initializeDatabase();
+        if (!isMounted) return;
+
+        const collection = getChatCollection();
+        if (!collection) return;
+
+        unsub = collection.find({ roomId }).onSnapshot(setMessages);
+        setReady(true);
+      } catch (err) {
+        console.error("useChat DB init error:", err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      if (unsub) unsub();
+    };
   }, [roomId]);
 
   const sendMessage = (text, sender) => {
-    chatCollection.insert({
+    if (!ready) return;
+    const collection = getChatCollection();
+    collection.insert({
       roomId,
       sender,
       text,
@@ -18,5 +41,5 @@ export function useChat(roomId) {
     });
   };
 
-  return { messages, sendMessage };
+  return { messages, sendMessage, ready };
 }
