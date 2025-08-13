@@ -10,7 +10,6 @@ export default defineConfig({
   base: isElectron ? './' : '/',
   optimizeDeps: {
     include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js', 'signaldb'],
-    // Removed 'signaldb' from exclude so it bundles for the web
     exclude: ['fs'].concat(isElectron ? ['electron', 'electron-fetch'] : [])
   },
   build: {
@@ -34,13 +33,15 @@ export default defineConfig({
       external: !isElectron ? ['fs'] : ['fs', 'events']
     },
     assetsInlineLimit: isElectron ? 0 : 4096,
-    target: isElectron ? 'esnext' : 'es2022' // Modern browsers + top-level await
+    target: isElectron ? 'esnext' : 'es2022'
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      // Polyfill "events" only for browser builds
-      ...(isElectron ? {} : { events: 'events/' })
+      // Polyfill "events" for browser builds
+      ...(isElectron ? {} : { events: 'events/' }),
+      // Force SignalDB to use browser ESM build
+      'signaldb': 'signaldb/dist/index16.mjs'
     }
   },
   server: {
