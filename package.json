@@ -1,0 +1,64 @@
+{
+  "name": "omnio-crossplatform",
+  "version": "1.0.0",
+  "description": "Cross-platform file viewer and chat application",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "electron": "wait-on http://localhost:5173 && electron .",
+    "electron:dev": "concurrently \"npm run dev\" \"npm run electron\"",
+    "electron:build": "npm run build && electron-builder",
+    "desktop": "electron-builder --dir",
+    "pack": "electron-builder"
+  },
+  "build": {
+    "appId": "com.omnio.app",
+    "productName": "OmniO",
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "output": "releases"
+    },
+    "mac": {
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "dependencies": {
+    "crypto-js": "^4.1.1",
+    "electron-store": "^8.1.0",
+    "fflate": "^0.7.4",
+    "lucide-react": "^0.268.0",
+    "mammoth": "^1.6.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
+    "react-player": "^2.12.0",
+    "react-split": "^2.0.0",
+    "signaldb": "^0.24.5",
+    "simple-peer": "^9.11.1",
+    "uuid": "^9.0.0",
+    "ws": "^8.13.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "^8.2.0",
+    "electron": "^25.3.1",
+    "electron-builder": "^24.6.3",
+    "vite": "^5.0.0",
+    "wait-on": "^7.0.1"
+  }
+}
