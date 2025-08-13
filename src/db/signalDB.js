@@ -1,42 +1,10 @@
+import { SignalDB } from "@signaldb/core";
 import { E2EEEncryption, SecureStorage } from "../utils/e2ee";
 import { LocalStorageDB } from "./localStorage";
-
-let SignalDB;
-
-// Helper to validate the constructor
-function isValidConstructor(fn) {
-  return typeof fn === "function" && /^class\s/.test(Function.prototype.toString.call(fn));
-}
-
-// Try @signaldb/core first
-try {
-  const signalModule = await import("@signaldb/core");
-  const candidate = signalModule.SignalDB || signalModule.default;
-  if (isValidConstructor(candidate)) {
-    SignalDB = candidate;
-  } else {
-    throw new Error("Invalid @signaldb/core export");
-  }
-} catch (e1) {
-  console.warn("@signaldb/core not found or invalid, trying signaldb...");
-  try {
-    const signalModule = await import("signaldb");
-    const candidate = signalModule.SignalDB || signalModule.default;
-    if (isValidConstructor(candidate)) {
-      SignalDB = candidate;
-    } else {
-      throw new Error("Invalid signaldb export");
-    }
-  } catch (e2) {
-    console.warn("No valid SignalDB found, using LocalStorage fallback");
-    SignalDB = LocalStorageDB;
-  }
-}
 
 // Detect Electron
 export const isElectronEnvironment = () =>
   Boolean(window.electronAPI && window.electronAPI.isElectron);
-
 export const isElectronApp = isElectronEnvironment();
 
 let db;
@@ -44,11 +12,11 @@ let initialized = false;
 
 export const initializeDatabase = async () => {
   if (initialized) return db;
-
+  
   try {
     const secureStore = new SecureStorage("omnio-db");
     let encryptionKey = secureStore.get("db-encryption-key");
-
+    
     if (!encryptionKey) {
       encryptionKey = await E2EEEncryption.generateRoomKey();
       secureStore.set("db-encryption-key", encryptionKey);
@@ -81,6 +49,7 @@ export const initializeDatabase = async () => {
     return db;
   } catch (error) {
     console.error("Failed to initialize SignalDB, using fallback:", error);
+    // Fallback to LocalStorage if SignalDB fails
     db = new LocalStorageDB({ name: "omnio-fallback" });
     await db.ready?.();
     initialized = true;
