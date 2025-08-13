@@ -6,12 +6,11 @@ const isElectron = process.env.ELECTRON === 'true';
 
 export default defineConfig({
   plugins: [react()],
-  base: isElectron ? './' : '/',
+  base: isElectron ? './' : '/', // ✅ SPA root for Vercel
   optimizeDeps: {
     include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js'],
     exclude: [
       'signaldb',
-      'events',
       'fs',
       ...(isElectron ? ['electron', 'electron-fetch'] : [])
     ]
@@ -28,12 +27,12 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           media: ['simple-peer', 'react-player'],
           utils: ['crypto-js', 'fflate', 'uuid', 'signaldb'],
-          encryption: ['@/utils/e2ee'] // ✅ kept since file exists
+          encryption: [path.resolve(__dirname, 'src/utils/e2ee.js')]
         }
       },
-      external: isElectron ? [] : ['fs', 'events'],
+      external: isElectron ? [] : [] // ✅ No external deps for web
     },
-    target: isElectron ? 'esnext' : 'es2022', // ✅ fixes top-level await in Vercel
+    target: isElectron ? 'esnext' : 'es2022',
     assetsInlineLimit: isElectron ? 0 : 4096
   },
   resolve: {
