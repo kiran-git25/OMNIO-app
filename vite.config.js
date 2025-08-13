@@ -8,8 +8,13 @@ export default defineConfig({
   plugins: [react()],
   base: isElectron ? './' : '/',
   optimizeDeps: {
-    include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js', 'signaldb'],
-    exclude: isElectron ? ['electron', 'electron-fetch'] : []
+    include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js'],
+    exclude: [
+      'signaldb',
+      'events',
+      'fs',
+      ...(isElectron ? ['electron', 'electron-fetch'] : [])
+    ]
   },
   build: {
     commonjsOptions: {
@@ -23,25 +28,21 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           media: ['simple-peer', 'react-player'],
           utils: ['crypto-js', 'fflate', 'uuid', 'signaldb'],
-          encryption: ['@/utils/e2ee']
+          encryption: ['@/utils/e2ee'] // ✅ kept since file exists
         }
       },
-      external: ['fs', 'events']
+      external: isElectron ? [] : ['fs', 'events'],
     },
-    assetsInlineLimit: isElectron ? 0 : 4096,
-    target: isElectron ? 'esnext' : 'modules'
+    target: isElectron ? 'esnext' : 'es2022', // ✅ fixes top-level await in Vercel
+    assetsInlineLimit: isElectron ? 0 : 4096
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')
-    },
-    fallback: {
-      events: require.resolve('events/')
     }
   },
   server: {
     port: 5174,
-    strictPort: false,
     host: '0.0.0.0',
     cors: true
   },
@@ -49,8 +50,6 @@ export default defineConfig({
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || '1.0.0'),
     'import.meta.env.VITE_IS_ELECTRON': isElectron,
     global: 'globalThis',
-    ...(isElectron ? {
-      'process.env.ELECTRON_DISABLE_SECURITY_WARNINGS': 'true'
-    } : {})
+    ...(isElectron ? { 'process.env.ELECTRON_DISABLE_SECURITY_WARNINGS': 'true' } : {})
   }
 });
