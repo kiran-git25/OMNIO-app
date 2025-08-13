@@ -1,17 +1,34 @@
 import { E2EEEncryption, SecureStorage } from "../utils/e2ee";
 import { LocalStorageDB } from "./localStorage";
 
-// Try @signaldb/core first, then fallback to old signaldb, else LocalStorage
 let SignalDB;
+
+// Helper to validate the constructor
+function isValidConstructor(fn) {
+  return typeof fn === "function" && /^class\s/.test(Function.prototype.toString.call(fn));
+}
+
+// Try @signaldb/core first
 try {
   const signalModule = await import("@signaldb/core");
-  SignalDB = signalModule.SignalDB || signalModule.default;
+  const candidate = signalModule.SignalDB || signalModule.default;
+  if (isValidConstructor(candidate)) {
+    SignalDB = candidate;
+  } else {
+    throw new Error("Invalid @signaldb/core export");
+  }
 } catch (e1) {
+  console.warn("@signaldb/core not found or invalid, trying signaldb...");
   try {
     const signalModule = await import("signaldb");
-    SignalDB = signalModule.SignalDB || signalModule.default;
+    const candidate = signalModule.SignalDB || signalModule.default;
+    if (isValidConstructor(candidate)) {
+      SignalDB = candidate;
+    } else {
+      throw new Error("Invalid signaldb export");
+    }
   } catch (e2) {
-    console.warn("No SignalDB package found, using LocalStorage fallback");
+    console.warn("No valid SignalDB found, using LocalStorage fallback");
     SignalDB = LocalStorageDB;
   }
 }
