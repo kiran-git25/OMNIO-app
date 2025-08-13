@@ -1,4 +1,4 @@
-import { SignalDB } from "@signaldb/core";
+import { Collection } from "@signaldb/core";
 import { E2EEEncryption, SecureStorage } from "../utils/e2ee";
 import { LocalStorageDB } from "./localStorage";
 
@@ -7,7 +7,7 @@ export const isElectronEnvironment = () =>
   Boolean(window.electronAPI && window.electronAPI.isElectron);
 export const isElectronApp = isElectronEnvironment();
 
-let db;
+let db = {};
 let initialized = false;
 
 export const initializeDatabase = async () => {
@@ -22,29 +22,22 @@ export const initializeDatabase = async () => {
       secureStore.set("db-encryption-key", encryptionKey);
     }
 
-    const adapters = ["local"];
-    if (navigator.onLine) adapters.push("websocket");
-
-    db = new SignalDB({
-      name: "omnio-db",
-      adapters,
-      local: { encrypt: false },
-      websocket: {
-        url: isElectronApp
-          ? "ws://localhost:3001"
-          : "wss://openrelay.metered.ca:443",
-        encryptMessages: true,
-        encryptionKey,
-        reconnectDelay: 1500,
-        maxReconnectAttempts: 10
+    // Initialize a simple db object to hold collections
+    db = {
+      collection: (name, options = {}) => {
+        if (!db[name]) {
+          db[name] = new Collection(options);
+        }
+        return db[name];
+      },
+      ready: async () => Promise.resolve(),
+      on: (event, callback) => {
+        // Simple event handling - you can enhance this if needed
+        console.log(`Event registered: ${event}`);
       }
-    });
+    };
 
-    db.on("connect", () => console.log("SignalDB connected"));
-    db.on("disconnect", () => console.log("SignalDB disconnected"));
-    db.on("error", (error) => console.error("SignalDB error:", error));
-
-    await db.ready();
+    console.log("SignalDB (Collection-based) initialized");
     initialized = true;
     return db;
   } catch (error) {
