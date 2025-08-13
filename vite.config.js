@@ -32,15 +32,13 @@ export default defineConfig({
       },
       external: !isElectron ? ['fs'] : ['fs', 'events']
     },
-    // Avoid inlining assets when building for Electron
     assetsInlineLimit: isElectron ? 0 : 4096,
-    // Modern targets to allow top-level await in browsers
-    target: isElectron ? 'esnext' : 'es2022'
+    target: isElectron ? 'esnext' : 'es2022' // allow top-level await in browsers
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      // Polyfill events only for web builds
+      // Only polyfill "events" for browser builds
       ...(isElectron ? {} : { events: 'events/' })
     }
   },
