@@ -1,4 +1,4 @@
-import SignalDB from "signaldb";
+import SignalDB from "./signaldb";
 
 let db;
 let socket;
