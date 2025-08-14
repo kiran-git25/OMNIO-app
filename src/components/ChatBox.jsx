@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactPlayer from "react-player";
-import { chatCollection, isElectronApp } from "../db/signalDB"; // our SignalDB chat storage
+import { getChatCollection, isElectronApp } from "../db/signalDB"; // our SignalDB chat storage
 import { E2EEEncryption, SecureStorage } from "../utils/e2ee";
 import { openFileDialog } from "../utils/electronFileService";
 
