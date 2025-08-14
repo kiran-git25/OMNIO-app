@@ -2,17 +2,15 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+// Check if building for Electron
 const isElectron = process.env.ELECTRON === 'true';
 
 export default defineConfig({
   plugins: [react()],
-  base: isElectron ? './' : '/', // ✅ SPA root for Vercel
+  base: isElectron ? './' : '/',
   optimizeDeps: {
     include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js'],
-    exclude: [
-      'fs',
-      ...(isElectron ? ['electron', 'electron-fetch'] : [])
-    ]
+    exclude: ['signaldb', 'events', 'fs'].concat(isElectron ? ['electron', 'electron-fetch'] : [])
   },
   build: {
     commonjsOptions: {
@@ -20,19 +18,34 @@ export default defineConfig({
     },
     outDir: 'dist',
     emptyOutDir: true,
+    target: 'es2020',
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
           media: ['simple-peer', 'react-player'],
           utils: ['crypto-js', 'fflate', 'uuid'],
-          encryption: [path.resolve(__dirname, 'src/utils/e2ee.js')]
+          encryption: ['@/utils/e2ee']
         }
       },
-      external: isElectron ? [] : [] // ✅ No external deps for web
+      external: isElectron ? [] : ['fs', 'events'],
+      ...(isElectron ? {} : {
+        output: {
+          globals: {
+            'fs': '{}',
+            'events': 'EventTarget'
+          },
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            media: ['simple-peer', 'react-player'],
+            utils: ['crypto-js', 'fflate', 'uuid'],
+            encryption: ['@/utils/e2ee']
+          }
+        }
+      })
     },
-    target: isElectron ? 'esnext' : 'es2022',
-    assetsInlineLimit: isElectron ? 0 : 4096
+    minify: 'esbuild',
+    cssCodeSplit: true
   },
   resolve: {
     alias: {
@@ -41,6 +54,7 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    strictPort: false,
     host: '0.0.0.0',
     cors: true
   },
@@ -48,6 +62,8 @@ export default defineConfig({
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || '1.0.0'),
     'import.meta.env.VITE_IS_ELECTRON': isElectron,
     global: 'globalThis',
-    ...(isElectron ? { 'process.env.ELECTRON_DISABLE_SECURITY_WARNINGS': 'true' } : {})
+    ...(isElectron ? {
+      'process.env.ELECTRON_DISABLE_SECURITY_WARNINGS': 'true'
+    } : {})
   }
 });
