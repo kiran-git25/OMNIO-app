@@ -10,7 +10,6 @@ export default defineConfig({
   optimizeDeps: {
     include: ['xlsx', 'mammoth', 'fflate', 'simple-peer', 'crypto-js'],
     exclude: [
-      'signaldb',
       'fs',
       ...(isElectron ? ['electron', 'electron-fetch'] : [])
     ]
@@ -26,7 +25,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           media: ['simple-peer', 'react-player'],
-          utils: ['crypto-js', 'fflate', 'uuid', 'signaldb'],
+          utils: ['crypto-js', 'fflate', 'uuid'],
           encryption: [path.resolve(__dirname, 'src/utils/e2ee.js')]
         }
       },
