@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { chatCollection } from "../db/signalDB";
+import { getChatCollection } from "../db/signalDB";
 
 export function useChat(roomId) {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
+    const chatCollection = getChatCollection();
     const unsub = chatCollection.find({ roomId }).onSnapshot(setMessages);
     return () => unsub();
   }, [roomId]);
 
   const sendMessage = (text, sender) => {
-    chatCollection.insert({
+    getChatCollection().insert({
       roomId,
       sender,
       text,

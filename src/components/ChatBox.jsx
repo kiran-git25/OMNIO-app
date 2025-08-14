@@ -36,6 +36,7 @@ export default function ChatBox({
 
   // Sync rooms from DB
   useEffect(() => {
+    const chatCollection = getChatCollection();
     const unsub = chatCollection.find().onSnapshot((allMessages) => {
       // Group by roomId
       const grouped = {};
@@ -131,7 +132,7 @@ export default function ChatBox({
       }
     }
     
-    chatCollection.insert(message);
+    getChatCollection().insert(message);
   }, [rooms, secureMode, roomKeys]);
 
   const send = () => {

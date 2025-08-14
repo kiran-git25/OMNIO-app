@@ -6,7 +6,7 @@ import ChatBox from "./components/ChatBox";
 import URLPlayer from "./components/URLPlayer";
 import Split from "react-split";
 import { isElectronEnvironment, openFileDialog } from "./utils/electronFileService";
-import { chatCollection, initializeDatabase } from "./db/signalDB";
+import { getChatCollection, initializeDatabase } from "./db/signalDB";
 import "./index.css";
 
 /*
@@ -92,6 +92,7 @@ export default function App() {
   
   // Sync rooms from chatCollection
   useEffect(() => {
+    const chatCollection = getChatCollection();
     const unsub = chatCollection.find().onSnapshot((messages) => {
       // Group by roomId
       const groupedRooms = {};
@@ -135,7 +136,7 @@ export default function App() {
     setTimeout(() => {
       if (rooms.length === 0) {
         const generalRoomId = "r_general";
-        chatCollection.insert({
+        getChatCollection().insert({
           id: Date.now().toString(),
           roomId: generalRoomId,
           roomName: "General",
@@ -249,7 +250,7 @@ export default function App() {
   
   // chat helpers
   const sendMessageToRoom = (roomId, message) => {
-    chatCollection.insert({
+    getChatCollection().insert({
       ...message,
       id: Date.now().toString() + "-" + Math.random().toString(36).slice(2,6),
       roomId,
@@ -261,7 +262,7 @@ export default function App() {
   const shareStreamToRoom = (roomId, streamUrl) => {
     if (!roomId) return;
     
-    chatCollection.insert({
+    getChatCollection().insert({
       id: Date.now().toString() + "-" + Math.random().toString(36).slice(2,6),
       roomId,
       roomName: activeRoom?.name || roomId,
